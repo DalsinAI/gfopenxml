@@ -1,0 +1,24 @@
+{
+  "mutation_schema_test": {
+    "bytes": 1596876,
+    "fpu_instruction_count": 26,
+    "examples": [
+      "1520a:\tf338 0000      \tfsave 0 <__stext>",
+      "2e296:\tf22e 0404      \tfsqrtx %fp1,%fp0",
+      "2f172:\tf29c 0000      \tfbnge 2f174 <__ZN9__gnu_cxx12__atomic_addEPVii+0x95e2>",
+      "2f1aa:\tf378 0000      \tfrestore 0 <__stext>",
+      "339c2:\tf22e 0c04      \tfsqrtx %fp3,%fp0"
+    ]
+  },
+  "schema_check": {
+    "bytes": 1671148,
+    "fpu_instruction_count": 23,
+    "examples": [
+      "2bbda:\tf22e 0404      \tfsqrtx %fp1,%fp0",
+      "31306:\tf22e 0c04      \tfsqrtx %fp3,%fp0",
+      "3139a:\tf22e 0c04      \tfsqrtx %fp3,%fp0",
+      "34432:\tf274 0000 0026 \tfsf a4@(26,d0:w)",
+      "3926e:\tf22e 0804      \tfsqrtx %fp2,%fp0"
+    ]
+  }
+}

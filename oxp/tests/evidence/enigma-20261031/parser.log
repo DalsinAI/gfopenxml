@@ -1,0 +1,10 @@
+ok   no XML declaration: version NULL
+ok   a declaration: its version, standalone not said
+ok   standalone='no'
+ok   1,110 nested references against a limit of 512: refused
+ok   the same against 2,000: read
+ok   the same with no limit set: read
+ok   2,000 top-level references, limit 512: read
+ok   3 nested references in an attribute, limit 2: refused
+apitest: all ok
+cases: 72 passed, 0 failed

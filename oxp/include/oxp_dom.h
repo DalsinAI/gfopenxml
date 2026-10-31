@@ -16,12 +16,14 @@ extern "C" {
 #endif
 
 typedef enum { OXP_NODE_DOCUMENT, OXP_NODE_ELEMENT, OXP_NODE_TEXT, OXP_NODE_CDATA, OXP_NODE_COMMENT, OXP_NODE_PI } oxp_node_type;
+typedef struct oxp_doc oxp_doc;
 
 typedef struct oxp_dattr {
     const char *local, *prefix, *uri;   /* prefix and uri NULL when none */
     const char *value;
     size_t value_len;
     struct oxp_dattr *next;
+    unsigned defaulted;                /* supplied by a schema rather than the document */
 } oxp_dattr;
 
 typedef struct oxp_dns {                /* a namespace declaration on an element */
@@ -40,9 +42,23 @@ typedef struct oxp_node {
     oxp_dattr *attrs;
     oxp_dns *ns;
     unsigned long line;                 /* where it started */
+    oxp_doc *owner;                     /* owning arena; never attach across documents */
 } oxp_node;
 
-typedef struct oxp_doc oxp_doc;
+/* Mutable trees. Nodes and strings belong to the document, including detached
+ * nodes, until oxp_dom_free(). Import explicitly when crossing documents.
+ * Mutation returns 0, -1 for allocation failure, -2 for invalid input/ownership.
+ * Existing callers must rebuild: the public node and attribute structs grew. */
+oxp_doc *oxp_dom_new(void);
+oxp_node *oxp_dom_create(oxp_doc *, oxp_node_type, const char *uri,
+                          const char *prefix, const char *local, const char *text);
+int oxp_dom_insert(oxp_node *parent, oxp_node *child, oxp_node *before);
+int oxp_dom_detach(oxp_node *child);
+int oxp_dom_set_attr(oxp_node *, const char *uri, const char *prefix,
+                        const char *local, const char *value, unsigned defaulted);
+int oxp_dom_remove_attr(oxp_node *, const char *uri, const char *local);
+int oxp_dom_set_text(oxp_node *, const char *text);
+oxp_node *oxp_dom_import(oxp_doc *, const oxp_node *, int deep);
 
 /* Read a whole document. On an error it returns NULL; err, message (copied
  * into msg) and the line and column say why. Any of them may be NULL. */

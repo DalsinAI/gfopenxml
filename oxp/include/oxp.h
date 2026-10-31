@@ -145,7 +145,8 @@ typedef enum {
     OXP_ENC_UTF16LE,
     OXP_ENC_UTF16BE,
     OXP_ENC_LATIN1,       /* ISO-8859-1 */
-    OXP_ENC_ASCII
+    OXP_ENC_ASCII,
+    OXP_ENC_WINDOWS1252
 } oxp_encoding;
 
 typedef struct oxp_alloc {
