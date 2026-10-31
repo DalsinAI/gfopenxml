@@ -1,0 +1,14 @@
+{
+  "cpu": "68040",
+  "fpu": "disabled",
+  "jit": false,
+  "schema_checks": 148,
+  "adapter_checks": 28,
+  "failures": 0,
+  "integer_benchmark_values": 1024,
+  "old_seconds": 4.46,
+  "new_seconds": 2.38,
+  "timing": "guest gettimeofday around identical public-API validation workload; both use same Open4 soft-float compiler flags",
+  "old_schema_archive_sha256": "1f8028b1669cc7161c189b6f89f796eab83b800101728c5c793c33e09f683534",
+  "new_schema_archive_sha256": "7bfa5d33d6aeae979250caa81ed4f77365d17e9f9fa6fd68d5d2d480a423983a"
+}
