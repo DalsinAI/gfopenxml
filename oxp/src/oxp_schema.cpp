@@ -414,19 +414,22 @@ struct Validation {
       }
       return true;
     }
+    // Integer bounds need no soft-float conversion on 68040 targets.
+    const bool negative = v[0] == '-';
+    const char *digits = v.c_str() + ((v[0] == '-' || v[0] == '+') ? 1 : 0);
     errno = 0;
     char *end = nullptr;
-    double x = std::strtod(v.c_str(), &end);
+    unsigned long x = std::strtoul(digits, &end, 10);
     if (errno || !end || *end)
       return false;
     if (type == "short")
-      return x >= -32768 && x <= 32767;
+      return x <= (negative ? 32768UL : 32767UL);
     if (type == "int")
-      return x >= (-2147483647LL - 1) && x <= 2147483647LL;
+      return x <= (negative ? 2147483648UL : 2147483647UL);
     if (type == "unsignedShort")
-      return x >= 0 && x <= 65535;
+      return (!negative || x == 0) && x <= 65535UL;
     if (type == "unsignedInt")
-      return x >= 0 && x <= 4294967295LL;
+      return (!negative || x == 0) && x <= 4294967295UL;
     return false;
   }
   bool simple(N *rule, S &v, unsigned depth = 0) {

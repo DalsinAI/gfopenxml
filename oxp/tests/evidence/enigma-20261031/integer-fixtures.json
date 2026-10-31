@@ -1,0 +1,33 @@
+{
+  "groups": {
+    "ratings": {
+      "files": 2,
+      "failed_batches": 0
+    },
+    "preferences": {
+      "files": 1,
+      "failed_batches": 0
+    },
+    "score": {
+      "files": 1,
+      "failed_batches": 0
+    },
+    "index": {
+      "files": 54,
+      "failed_batches": 0
+    },
+    "state": {
+      "files": 1,
+      "failed_batches": 0
+    },
+    "objects": {
+      "files": 1,
+      "failed_batches": 0
+    },
+    "level": {
+      "files": 1574,
+      "failed_batches": 0
+    }
+  },
+  "malformed_xml_files": []
+}

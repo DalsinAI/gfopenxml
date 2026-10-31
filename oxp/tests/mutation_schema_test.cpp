@@ -191,7 +191,33 @@ static void patterns() {
   auto invalid = parse("<revision>$Revision: fail $</revision>");
   CHECK(oxp_schema_validate(s.get(), invalid.get(), &e) == -1);
 }
+static void integerBounds() {
+  struct Case { const char *value; bool valid; };
+  const Case cases[][6] = {
+    {{"32767",true},{"-32768",true},{"32768",false},{"-32769",false},
+     {"-0000000000000000000000",true},{"+00000012",true}},
+    {{"2147483647",true},{"-2147483648",true},{"2147483648",false},
+     {"-2147483649",false},{"+0002147483647",true},{"18446744073709551616",false}},
+    {{"65535",true},{"65536",false},{"-1",false},{"-0",true},
+     {"+00065535",true},{"10e1",false}},
+    {{"4294967295",true},{"4294967296",false},{"-1",false},{"-0",true},
+     {"+0004294967295",true},{"18446744073709551616",false}}
+  };
+  const char *types[] = {"short", "int", "unsignedShort", "unsignedInt"};
+  for (unsigned i=0; i<4; ++i) {
+    auto schema = compile(std::string("<x:schema xmlns:x='http://www.w3.org/2001/XMLSchema'><x:element name='r'><x:complexType><x:attribute name='v' type='x:") + types[i] + "' use='required'/></x:complexType></x:element></x:schema>");
+    CHECK(schema);
+    if (!schema) continue;
+    for (const auto &test : cases[i]) {
+      auto doc = parse(std::string("<r v='") + test.value + "'/>");
+      CHECK(doc);
+      oxp_schema_error error;
+      CHECK(doc && oxp_schema_validate(schema.get(),doc.get(),&error) == (test.valid ? 0 : -1));
+    }
+  }
+}
 int main() {
+  integerBounds();
   validation();
   keys();
   mutation();
