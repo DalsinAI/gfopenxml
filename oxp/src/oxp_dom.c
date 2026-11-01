@@ -244,21 +244,27 @@ oxp_node *oxp_dom_next(const oxp_node *n, const char *u, const char *l)
     return NULL;
 }
 
-static size_t text_into(const oxp_node *n, char *buf, size_t size, size_t at)
+/* The text of n and everything under it. Walked with the tree's own parent and
+ * next links, not by recursion: the parser allows thousands of nested elements,
+ * and a C frame for each would overflow a 32-64 KB Amiga stack. */
+size_t oxp_dom_text(const oxp_node *top, char *buf, size_t size)
 {
-    if (n->type == OXP_NODE_TEXT || n->type == OXP_NODE_CDATA) {
-        if (at < size) { size_t k = size - at - 1 < n->len ? size - at - 1 : n->len; memcpy(buf + at, n->text, k); }
-        return at + n->len;
+    size_t at = 0;
+    const oxp_node *n = top;
+    for (;;) {
+        if (n->type == OXP_NODE_TEXT || n->type == OXP_NODE_CDATA) {
+            if (at < size) { size_t k = size - at - 1 < n->len ? size - at - 1 : n->len; memcpy(buf + at, n->text, k); }
+            at += n->len;
+        } else if ((n->type == OXP_NODE_ELEMENT || n->type == OXP_NODE_DOCUMENT) && n->first) {
+            n = n->first;
+            continue;
+        }
+        while (n != top && !n->next) n = n->parent;
+        if (n == top) break;
+        n = n->next;
     }
-    if (n->type == OXP_NODE_ELEMENT || n->type == OXP_NODE_DOCUMENT)
-        for (const oxp_node *c = n->first; c; c = c->next) at = text_into(c, buf, size, at);
+    if (size) buf[at < size ? at : size - 1] = 0;
     return at;
-}
-size_t oxp_dom_text(const oxp_node *n, char *buf, size_t size)
-{
-    size_t total = text_into(n, buf, size, 0);
-    if (size) buf[total < size ? total : size - 1] = 0;
-    return total;
 }
 
 typedef int (*wfn)(void *, const char *, size_t);
@@ -287,12 +293,11 @@ static int qname(wfn f, void *c, const char *pfx, const char *l)
     return w(f, c, l);
 }
 
-int oxp_dom_write(const oxp_node *n, wfn f, void *c)
+/* One node: a leaf whole, an element's start tag ("/>" when it has no children). */
+static int write_open(const oxp_node *n, wfn f, void *c)
 {
     switch (n->type) {
-    case OXP_NODE_DOCUMENT:
-        for (const oxp_node *k = n->first; k; k = k->next) if (oxp_dom_write(k, f, c)) return -1;
-        return 0;
+    case OXP_NODE_DOCUMENT: return 0;
     case OXP_NODE_TEXT: return wesc(f, c, n->text, n->len, 0);
     case OXP_NODE_CDATA: {
         if (w(f,c,"<![CDATA[")) return -1;
@@ -317,12 +322,25 @@ int oxp_dom_write(const oxp_node *n, wfn f, void *c)
         for (const oxp_dattr *a = n->attrs; a; a = a->next)
             if (w(f, c, " ") || qname(f, c, a->prefix, a->local) || w(f, c, "=\"") || wesc(f, c, a->value, a->value_len, 1) || w(f, c, "\""))
                 return -1;
-        if (!n->first) return w(f, c, "/>");
-        if (w(f, c, ">")) return -1;
-        for (const oxp_node *k = n->first; k; k = k->next) if (oxp_dom_write(k, f, c)) return -1;
-        return (w(f, c, "</") || qname(f, c, n->prefix, n->name) || w(f, c, ">")) ? -1 : 0;
+        return w(f, c, n->first ? ">" : "/>");
     }
     return 0;
+}
+
+/* Walked with the tree's own links, not by recursion (as oxp_dom_text). */
+int oxp_dom_write(const oxp_node *top, wfn f, void *c)
+{
+    const oxp_node *n = top;
+    for (;;) {
+        if (write_open(n, f, c)) return -1;
+        if ((n->type == OXP_NODE_ELEMENT || n->type == OXP_NODE_DOCUMENT) && n->first) { n = n->first; continue; }
+        for (;;) {                             /* n is written: on to the next, closing what ends */
+            if (n == top) return 0;
+            if (n->next) { n = n->next; break; }
+            n = n->parent;
+            if (n->type == OXP_NODE_ELEMENT && (w(f, c, "</") || qname(f, c, n->prefix, n->name) || w(f, c, ">"))) return -1;
+        }
+    }
 }
 
 /* Mutable tree operations. All storage is reclaimed with the document. */
@@ -516,17 +534,49 @@ int oxp_dom_set_text(oxp_node *n, const char *text)
     const char *s = str(n->owner,text,strlen(text)); if (!s) return -1;
     n->text = s; n->len = strlen(s); return 0;
 }
-oxp_node *oxp_dom_import(oxp_doc *d, const oxp_node *src, int deep)
+/* One node, with its namespaces and attributes, no children. */
+static oxp_node *import_one(oxp_doc *d, const oxp_node *src)
 {
-    if (!src || src->type == OXP_NODE_DOCUMENT) return NULL;
     oxp_node *n = oxp_dom_create(d,src->type,src->uri,src->prefix,src->name,src->text);
     if (!n) return NULL;
     for (const oxp_dns *x = src->ns; x; x = x->next) if (bind(n,x->prefix,x->uri)) return NULL;
     for (const oxp_dattr *a = src->attrs; a; a = a->next)
         if (oxp_dom_set_attr(n,a->uri,a->prefix,a->local,a->value,a->defaulted)) return NULL;
-    if (deep) for (const oxp_node *c = src->first; c; c = c->next) {
-        oxp_node *copy = oxp_dom_import(d,c,1);
-        if (!copy || oxp_dom_insert(n,copy,NULL)) return NULL;
-    }
     return n;
+}
+/* Deep: walked with the source's own links, not by recursion (as oxp_dom_text).
+ * Each copy is put in its parent once everything under it is copied, as the
+ * recursive copy did, so the namespaces come out the same; the copies of the
+ * open elements wait on a stack in the heap. */
+oxp_node *oxp_dom_import(oxp_doc *d, const oxp_node *src, int deep)
+{
+    if (!src || src->type == OXP_NODE_DOCUMENT) return NULL;
+    oxp_node *top = import_one(d, src), *k = top, **open = NULL;
+    size_t nopen = 0, capopen = 0;
+    const oxp_node *s = src;
+    if (!top || !deep) return top;
+    for (;;) {
+        if (s->first) {
+            if (nopen == capopen) {
+                size_t c = capopen ? capopen * 2 : 32;
+                oxp_node **q = c > ((size_t)-1) / sizeof *q ? NULL : realloc(open, c * sizeof *q);
+                if (!q) goto fail;
+                open = q; capopen = c;
+            }
+            open[nopen++] = k;
+            s = s->first;
+            if (!(k = import_one(d, s))) goto fail;
+            continue;
+        }
+        for (;;) {
+            if (s == src) { free(open); return top; }
+            if (oxp_dom_insert(open[nopen - 1], k, NULL)) goto fail;
+            if (s->next) { s = s->next; if (!(k = import_one(d, s))) goto fail; break; }
+            s = s->parent;
+            k = open[--nopen];
+        }
+    }
+fail:
+    free(open);
+    return NULL;
 }
