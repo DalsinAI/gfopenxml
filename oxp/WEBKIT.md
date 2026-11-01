@@ -1,7 +1,7 @@
 # OXP under WebKit: what a backend needs
 
 WebKit's XML parser (`Source/WebCore/xml/parser/XMLDocumentParserLibxml2.cpp`,
-1745 lines, in the WebKit tree OpenBrowser builds) is written against libxml2.
+1745 lines, in the WebKit tree GFOpenBrowser builds) is written against libxml2.
 This page lists every libxml2 callback and call it uses, and what OXP gives
 for each. A new `XMLDocumentParserOXP.cpp` would sit on this API, and so
 could WebKit's other XML user, `XMLDocumentParser`'s fragment parsing.

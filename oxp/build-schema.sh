@@ -8,7 +8,7 @@ MODE=${1:-host}
 case "$MODE" in
  host) CC=${CC:-cc}; CXX=${CXX:-c++}; AR=${AR:-ar}; CPU= ;;
  amiga)
-  STOVE_ROOT=${OS32_GCC16:-"$HOME/AmigaChrome/stoves/os32-gcc16"}
+  STOVE_ROOT=${OS32_GCC16:-"$HOME/AmiCradle/stoves/os32-gcc16"}
   CC=$STOVE_ROOT/prefix/bin/m68k-amigaos-gcc
   CXX=$STOVE_ROOT/prefix/bin/m68k-amigaos-g++
   AR=$STOVE_ROOT/prefix/bin/m68k-amigaos-ar
