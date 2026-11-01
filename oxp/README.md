@@ -146,3 +146,11 @@ XHTML files. For 0.1's 64 cases it also matched when fed 7 bytes at a time.
   `OXP_OPT_UNBOUND_PREFIX`.
 - Only the encodings above. Another declared encoding is an error, unless
   the caller fixes the encoding.
+
+## Editable trees and Enigma schemas (development branch)
+
+The existing parser is extended with owned tree editing/import operations,
+Windows-1252 input and an optional C++17 XSD-subset validator. The streaming
+parser remains C99 and does not require the validator. See [SCHEMA.md](SCHEMA.md)
+for the exact supported subset, ownership/ABI changes and build commands.
+Unsupported schema features are errors, not silently ignored rules.

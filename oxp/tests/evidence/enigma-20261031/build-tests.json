@@ -1,0 +1,14 @@
+{
+  "parser": {
+    "exit_code": 0,
+    "seconds": 6.48
+  },
+  "schema": {
+    "exit_code": 0,
+    "seconds": 14.464
+  },
+  "schema-soft68040": {
+    "exit_code": 0,
+    "seconds": 20.09
+  }
+}

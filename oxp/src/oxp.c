@@ -129,7 +129,7 @@ static ulong in_width(oxp_parser *p, unsigned long c, size_t n)
 {
     switch (p->enc) {
     case OXP_ENC_UTF16LE: case OXP_ENC_UTF16BE: return c >= 0x10000 ? 4 : 2;
-    case OXP_ENC_LATIN1: case OXP_ENC_ASCII: return 1;
+    case OXP_ENC_LATIN1: case OXP_ENC_ASCII: case OXP_ENC_WINDOWS1252: return 1;
     default: return n;
     }
 }
@@ -278,6 +278,23 @@ static int decode(oxp_parser *p, int last)
         if (last && i < n) { p->din.pos = p->doc.n; return fail(p, OXP_E_ENCODING, "the input ends inside a UTF-16 character") == R_OK; }
         break;
     }
+    case OXP_ENC_WINDOWS1252: {
+        static const unsigned short c1[32] = {
+            0x20ac,0,0x201a,0x0192,0x201e,0x2026,0x2020,0x2021,
+            0x02c6,0x2030,0x0160,0x2039,0x0152,0,0x017d,0,
+            0,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,
+            0x02dc,0x2122,0x0161,0x203a,0x0153,0,0x017e,0x0178
+        };
+        for (; i < stop; ++i) {
+            unsigned long c = r[i];
+            if (c >= 0x80 && c < 0xa0) {
+                c = c1[c - 0x80];
+                if (!c) { p->din.pos = p->doc.n; return fail(p,OXP_E_ENCODING,"an undefined Windows-1252 byte") == R_OK; }
+            }
+            if (!emit_char(p,c)) return 0;
+        }
+        break;
+    }
     case OXP_ENC_LATIN1: case OXP_ENC_ASCII:
         for (; i < stop; i++) {
             if (p->enc == OXP_ENC_ASCII && r[i] >= 0x80) { p->din.pos = p->doc.n; return fail(p, OXP_E_ENCODING, "a byte above 127 in US-ASCII") == R_OK; }
@@ -351,6 +368,7 @@ static int set_encoding_by_name(oxp_parser *p, const char *name)
     if (ieq(name, "UTF-8") || ieq(name, "UTF8")) p->enc = OXP_ENC_UTF8;
     else if (ieq(name, "ISO-8859-1") || ieq(name, "ISO_8859-1") || ieq(name, "latin1") || ieq(name, "ISO-Latin-1") ||
              ieq(name, "l1") || ieq(name, "ISO8859-1")) p->enc = OXP_ENC_LATIN1;
+    else if (ieq(name, "windows-1252") || ieq(name, "cp1252")) p->enc = OXP_ENC_WINDOWS1252;
     else if (ieq(name, "US-ASCII") || ieq(name, "ASCII")) p->enc = OXP_ENC_ASCII;
     else if (ieq(name, "UTF-16") || ieq(name, "UTF-16LE") || ieq(name, "UTF-16BE"))
         return failn(p, OXP_E_ENCODING, "UTF-16 declared, but the document is not in UTF-16:", name) == R_OK;

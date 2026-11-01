@@ -63,6 +63,7 @@ static oxp_node *node(oxp_dom_builder *b, oxp_node_type t)
     if (!n) { b->nomem = 1; return NULL; }
     memset(n, 0, sizeof *n);
     n->type = t;
+    n->owner = b->d;
     n->parent = b->cur;
     n->line = b->p ? oxp_line(b->p) : 0;
     if (b->cur->last) { b->cur->last->next = n; n->prev = b->cur->last; } else b->cur->first = n;
@@ -120,6 +121,7 @@ static void h_start(void *ud, const char *l, const char *pfx, const char *u, int
         x->uri = uri(d, a[i].uri);
         x->value = str(d, a[i].value, a[i].value_len);
         x->value_len = a[i].value_len;
+        x->defaulted = a[i].defaulted;
         x->next = NULL; *at = x; at = &x->next;
     }
     b->cur = n;
@@ -160,6 +162,7 @@ oxp_dom_builder *oxp_dom_builder_new(void)
     b->d = calloc(1, sizeof *b->d);
     if (!b->d) { free(b); return NULL; }
     b->d->docnode.type = OXP_NODE_DOCUMENT;
+    b->d->docnode.owner = b->d;
     b->cur = &b->d->docnode;
     return b;
 }
@@ -193,8 +196,8 @@ oxp_doc *oxp_dom_parse(const void *data, size_t len, unsigned options, oxp_code 
     if (msg && msgsize) { msg[0] = 0; if (m) { size_t n = strlen(m); if (n >= msgsize) n = msgsize - 1; memcpy(msg, m, n); msg[n] = 0; } }
     if (line) *line = l;
     if (column) *column = col;
-    oxp_free(p);
     oxp_doc *d = oxp_dom_builder_finish(b);
+    oxp_free(p);
     if (c) { oxp_dom_free(d); return NULL; }
     if (!d && err) *err = OXP_E_NOMEM;
     return d;
@@ -291,7 +294,15 @@ int oxp_dom_write(const oxp_node *n, wfn f, void *c)
         for (const oxp_node *k = n->first; k; k = k->next) if (oxp_dom_write(k, f, c)) return -1;
         return 0;
     case OXP_NODE_TEXT: return wesc(f, c, n->text, n->len, 0);
-    case OXP_NODE_CDATA: return (w(f, c, "<![CDATA[") || f(c, n->text, n->len) || w(f, c, "]]>")) ? -1 : 0;
+    case OXP_NODE_CDATA: {
+        if (w(f,c,"<![CDATA[")) return -1;
+        const char *s = n->text, *end = s + n->len, *at;
+        while ((at = strstr(s,"]]>")) != NULL) {
+            if (f(c,s,(size_t)(at-s)) || w(f,c,"]]]]><![CDATA[>")) return -1;
+            s = at + 3;
+        }
+        return f(c,s,(size_t)(end-s)) || w(f,c,"]]>") ? -1 : 0;
+    }
     case OXP_NODE_COMMENT: return (w(f, c, "<!--") || f(c, n->text, n->len) || w(f, c, "-->")) ? -1 : 0;
     case OXP_NODE_PI:
         if (w(f, c, "<?") || w(f, c, n->name)) return -1;
@@ -312,4 +323,210 @@ int oxp_dom_write(const oxp_node *n, wfn f, void *c)
         return (w(f, c, "</") || qname(f, c, n->prefix, n->name) || w(f, c, ">")) ? -1 : 0;
     }
     return 0;
+}
+
+/* Mutable tree operations. All storage is reclaimed with the document. */
+static int xmlchar(unsigned long c)
+{
+    return c == 9 || c == 10 || c == 13 || (c >= 32 && c <= 0xd7ff) ||
+        (c >= 0xe000 && c <= 0xfffd) || (c >= 0x10000 && c <= 0x10ffff);
+}
+static int namestart(unsigned long c)
+{
+    return c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+        (c >= 0xc0 && c <= 0xd6) || (c >= 0xd8 && c <= 0xf6) ||
+        (c >= 0xf8 && c <= 0x2ff) || (c >= 0x370 && c <= 0x37d) ||
+        (c >= 0x37f && c <= 0x1fff) || (c >= 0x200c && c <= 0x200d) ||
+        (c >= 0x2070 && c <= 0x218f) || (c >= 0x2c00 && c <= 0x2fef) ||
+        (c >= 0x3001 && c <= 0xd7ff) || (c >= 0xf900 && c <= 0xfdcf) ||
+        (c >= 0xfdf0 && c <= 0xfffd) || (c >= 0x10000 && c <= 0xeffff);
+}
+static int valid(const char *s, int name)
+{
+    const unsigned char *p = (const unsigned char *)s;
+    int first = 1;
+    if (!p || (name && !*p)) return 0;
+    while (*p) {
+        unsigned long c = *p++; unsigned n = 0; unsigned long minimum = 0;
+        if (c >= 0xc2 && c <= 0xdf) { n = 1; c &= 31; minimum = 0x80; }
+        else if (c >= 0xe0 && c <= 0xef) { n = 2; c &= 15; minimum = 0x800; }
+        else if (c >= 0xf0 && c <= 0xf4) { n = 3; c &= 7; minimum = 0x10000; }
+        else if (c >= 0x80) return 0;
+        for (unsigned i = 0; i < n; ++i) {
+            if ((*p & 0xc0) != 0x80) return 0;
+            c = (c << 6) | (*p++ & 63);
+        }
+        if (c < minimum || !xmlchar(c)) return 0;
+        if (name && !namestart(c) && (first || !(c == '-' || c == '.' ||
+            (c >= '0' && c <= '9') || c == 0xb7 || (c >= 0x300 && c <= 0x36f) ||
+            (c >= 0x203f && c <= 0x2040)))) return 0;
+        first = 0;
+    }
+    return 1;
+}
+static int nsvalid(const char *u, const char *p, const char *l, int attr)
+{
+    if (!valid(l, 1) || (p && !valid(p, 1)) || (u && !valid(u, 0))) return 0;
+    if (p && (!u || !*u)) return 0;
+    if (p && !strcmp(p, "xmlns")) return 0;
+    if (attr && !p && !strcmp(l, "xmlns")) return 0;
+    if (u && !strcmp(u, "http://www.w3.org/2000/xmlns/")) return 0;
+    if ((p && !strcmp(p, "xml")) != (u && !strcmp(u, "http://www.w3.org/XML/1998/namespace"))) return 0;
+    if (attr && u && *u && !p) return 0;
+    return 1;
+}
+oxp_doc *oxp_dom_new(void)
+{
+    oxp_doc *d = calloc(1, sizeof *d);
+    if (d) { d->docnode.type = OXP_NODE_DOCUMENT; d->docnode.owner = d; }
+    return d;
+}
+static int bind(oxp_node *n, const char *p, const char *u)
+{
+    if (p && !strcmp(p, "xml")) return 0;
+    const char *want = u ? u : "";
+    for (oxp_node *a = n; a; a = a->parent)
+        for (oxp_dns *x = a->ns; x; x = x->next)
+            if (same(x->prefix, p)) {
+                if (!strcmp(x->uri, want)) return 0;
+                if (a == n) { const char *v = uri(n->owner, want); if (!v) return -1; x->uri = v; return 0; }
+                goto add;
+            }
+    if (!p && !*want) return 0;
+add:;
+    oxp_dns *x = arena(n->owner, sizeof *x);
+    if (!x) return -1;
+    x->prefix = p ? str(n->owner, p, strlen(p)) : NULL;
+    x->uri = uri(n->owner, want);
+    if ((p && !x->prefix) || !x->uri) return -1;
+    x->next = n->ns; n->ns = x;
+    return 0;
+}
+oxp_node *oxp_dom_create(oxp_doc *d, oxp_node_type t, const char *u,
+                          const char *p, const char *l, const char *text)
+{
+    if (!d || t == OXP_NODE_DOCUMENT) return NULL;
+    if (t == OXP_NODE_ELEMENT && !nsvalid(u, p, l, 0)) return NULL;
+    if (t != OXP_NODE_ELEMENT && !valid(text ? text : "", 0)) return NULL;
+    if (t == OXP_NODE_COMMENT && (strstr(text ? text : "", "--") ||
+        (text && *text && text[strlen(text)-1] == '-'))) return NULL;
+    if (t == OXP_NODE_PI && (!valid(l, 1) || !strcmp(l, "xml") || !strcmp(l,"XML") || strstr(text ? text : "", "?>"))) return NULL;
+    if (t < OXP_NODE_ELEMENT || t > OXP_NODE_PI) return NULL;
+    oxp_node *n = arena(d, sizeof *n);
+    if (!n) return NULL;
+    memset(n, 0, sizeof *n); n->owner = d; n->type = t;
+    if (l) { n->name = str(d,l,strlen(l)); if (!n->name) return NULL; }
+    if (p) { n->prefix = str(d,p,strlen(p)); if (!n->prefix) return NULL; }
+    if (u && *u) { n->uri = uri(d,u); if (!n->uri) return NULL; }
+    if (t != OXP_NODE_ELEMENT) { n->text = str(d,text ? text : "",text ? strlen(text) : 0); if (!n->text) return NULL; n->len = strlen(n->text); }
+    if (t == OXP_NODE_ELEMENT && bind(n,p,u)) return NULL;
+    return n;
+}
+int oxp_dom_detach(oxp_node *n)
+{
+    if (!n || n->type == OXP_NODE_DOCUMENT) return -2;
+    if (!n->parent) return 0;
+    if (n->prev) n->prev->next = n->next; else n->parent->first = n->next;
+    if (n->next) n->next->prev = n->prev; else n->parent->last = n->prev;
+    n->parent = n->prev = n->next = NULL; return 0;
+}
+int oxp_dom_insert(oxp_node *p, oxp_node *n, oxp_node *before)
+{
+    if (!p || !n || p->owner != n->owner || n->type == OXP_NODE_DOCUMENT ||
+        (p->type != OXP_NODE_DOCUMENT && p->type != OXP_NODE_ELEMENT) ||
+        (before && before->parent != p)) return -2;
+    for (oxp_node *a = p; a; a = a->parent) if (a == n) return -2;
+    if (n == before) return 0;
+    if (p->type == OXP_NODE_DOCUMENT) {
+        if (n->type == OXP_NODE_TEXT || n->type == OXP_NODE_CDATA) return -2;
+        if (n->type == OXP_NODE_ELEMENT)
+            for (oxp_node *a = p->first; a; a = a->next)
+                if (a != n && a->type == OXP_NODE_ELEMENT) return -2;
+    }
+    /* Preserve all inherited bindings: descendants may use prefixes which
+     * the subtree root itself does not use. Keep the nearest binding. */
+    if (n->type == OXP_NODE_ELEMENT) {
+        for (oxp_node *ancestor = n->parent; ancestor; ancestor = ancestor->parent)
+            for (oxp_dns *x = ancestor->ns; x; x = x->next) {
+                int present = 0;
+                for (oxp_dns *own = n->ns; own; own = own->next)
+                    if (same(own->prefix,x->prefix)) { present = 1; break; }
+                if (!present) {
+                    oxp_dns *copy = arena(n->owner,sizeof *copy);
+                    if (!copy) return -1;
+                    *copy = *x; copy->next = n->ns; n->ns = copy;
+                }
+            }
+
+        if (bind(n,n->prefix,n->uri)) return -1;
+        for (oxp_dattr *a = n->attrs; a; a = a->next)
+            if (a->prefix && bind(n,a->prefix,a->uri)) return -1;
+    }
+    oxp_dom_detach(n);
+    n->parent = p; n->next = before; n->prev = before ? before->prev : p->last;
+    if (n->prev) n->prev->next = n; else p->first = n;
+    if (before) before->prev = n; else p->last = n;
+    /* A formerly unqualified root may now need xmlns="". */
+    if (n->type == OXP_NODE_ELEMENT && bind(n,n->prefix,n->uri)) return -1;
+    return 0;
+}
+int oxp_dom_set_attr(oxp_node *n, const char *u, const char *p,
+                        const char *l, const char *v, unsigned defaulted)
+{
+    if (!n || n->type != OXP_NODE_ELEMENT || !nsvalid(u,p,l,1) || !valid(v,0)) return -2;
+    if (p) {
+        if (same(n->prefix,p) && !same(n->uri,u)) return -2;
+        for (oxp_dattr *existing = n->attrs; existing; existing = existing->next)
+            if (same(existing->prefix,p) && !same(existing->uri,u)) return -2;
+    }
+    oxp_doc *d = n->owner;
+    const char *value = str(d,v,strlen(v));
+    if (!value) return -1;
+    oxp_dattr *a;
+    for (a = n->attrs; a; a = a->next) if (same(a->uri,u) && !strcmp(a->local,l)) break;
+    if (!a) {
+        a = arena(d,sizeof *a); if (!a) return -1;
+        memset(a,0,sizeof *a);
+        a->local = str(d,l,strlen(l)); a->uri = u ? uri(d,u) : NULL;
+        if (!a->local || (u && !a->uri)) return -1;
+        a->next = n->attrs; n->attrs = a;
+    }
+    const char *prefix = p ? str(d,p,strlen(p)) : NULL;
+    if (p && (!prefix || bind(n,p,u))) return -1;
+    a->prefix = prefix; a->value = value; a->value_len = strlen(v); a->defaulted = defaulted;
+    return 0;
+}
+int oxp_dom_remove_attr(oxp_node *n, const char *u, const char *l)
+{
+    if (!n || n->type != OXP_NODE_ELEMENT || !l) return -2;
+    for (oxp_dattr **a = &n->attrs; *a; a = &(*a)->next)
+        if (same((*a)->uri,u) && !strcmp((*a)->local,l)) { *a = (*a)->next; return 0; }
+    return 0;
+}
+int oxp_dom_set_text(oxp_node *n, const char *text)
+{
+    if (!n || !valid(text,0)) return -2;
+    if (n->type == OXP_NODE_ELEMENT) {
+        oxp_node *v = oxp_dom_create(n->owner,OXP_NODE_TEXT,NULL,NULL,NULL,text);
+        if (!v) return -1;
+        while (n->first) oxp_dom_detach(n->first);
+        return oxp_dom_insert(n,v,NULL);
+    }
+    if (n->type != OXP_NODE_TEXT && n->type != OXP_NODE_CDATA) return -2;
+    const char *s = str(n->owner,text,strlen(text)); if (!s) return -1;
+    n->text = s; n->len = strlen(s); return 0;
+}
+oxp_node *oxp_dom_import(oxp_doc *d, const oxp_node *src, int deep)
+{
+    if (!src || src->type == OXP_NODE_DOCUMENT) return NULL;
+    oxp_node *n = oxp_dom_create(d,src->type,src->uri,src->prefix,src->name,src->text);
+    if (!n) return NULL;
+    for (const oxp_dns *x = src->ns; x; x = x->next) if (bind(n,x->prefix,x->uri)) return NULL;
+    for (const oxp_dattr *a = src->attrs; a; a = a->next)
+        if (oxp_dom_set_attr(n,a->uri,a->prefix,a->local,a->value,a->defaulted)) return NULL;
+    if (deep) for (const oxp_node *c = src->first; c; c = c->next) {
+        oxp_node *copy = oxp_dom_import(d,c,1);
+        if (!copy || oxp_dom_insert(n,copy,NULL)) return NULL;
+    }
+    return n;
 }

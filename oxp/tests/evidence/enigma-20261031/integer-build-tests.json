@@ -1,0 +1,23 @@
+{
+  "host_sanitizer_note": "GCC 15 libstdc++ regex triggers maybe-uninitialized warnings under ASan; only that host warning is nonfatal. All target flags retain -Werror.",
+  "integer-host": {
+    "exit": 0,
+    "seconds": 39.633
+  },
+  "integer-soft68040": {
+    "exit": 0,
+    "seconds": 17.95
+  },
+  "integer-fixtures": {
+    "exit": 0,
+    "seconds": 18.49
+  },
+  "integer-adapter-build": {
+    "exit": 0,
+    "seconds": 12.634
+  },
+  "integer-adapter": {
+    "exit": 0,
+    "seconds": 0.522
+  }
+}
