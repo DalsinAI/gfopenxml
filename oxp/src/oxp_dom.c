@@ -101,15 +101,19 @@ static void h_start(void *ud, const char *l, const char *pfx, const char *u, int
     oxp_node *n = node(b, OXP_NODE_ELEMENT);
     if (!n) return;
     oxp_doc *d = b->d;
+    /* str() and uri() give NULL when out of memory: the tree is then refused
+     * (finish), never handed out with a NULL name, value or namespace */
     n->name = str(d, l, strlen(l));
     n->prefix = pfx ? str(d, pfx, strlen(pfx)) : NULL;
     n->uri = uri(d, u);
+    if (!n->name || (pfx && !n->prefix) || (u && !n->uri)) b->nomem = 1;
     oxp_dns **nt = &n->ns;
     for (int i = 0; i < nns; i++) {
         oxp_dns *x = arena(d, sizeof *x);
         if (!x) { b->nomem = 1; return; }
         x->prefix = ns[i].prefix ? str(d, ns[i].prefix, strlen(ns[i].prefix)) : NULL;
         x->uri = uri(d, ns[i].uri);
+        if ((ns[i].prefix && !x->prefix) || (ns[i].uri && !x->uri)) b->nomem = 1;
         x->next = NULL; *nt = x; nt = &x->next;
     }
     oxp_dattr **at = &n->attrs;
@@ -122,6 +126,7 @@ static void h_start(void *ud, const char *l, const char *pfx, const char *u, int
         x->value = str(d, a[i].value, a[i].value_len);
         x->value_len = a[i].value_len;
         x->defaulted = a[i].defaulted;
+        if (!x->local || (a[i].prefix && !x->prefix) || (a[i].uri && !x->uri) || (a[i].value && !x->value)) b->nomem = 1;
         x->next = NULL; *at = x; at = &x->next;
     }
     b->cur = n;
@@ -140,14 +145,17 @@ static void h_comment(void *ud, const char *t)
     oxp_dom_builder *b = ud;
     flush(b);
     oxp_node *n = node(b, OXP_NODE_COMMENT);
-    if (n) { n->len = strlen(t); n->text = str(b->d, t, n->len); }
+    if (n) { n->len = strlen(t); n->text = str(b->d, t, n->len); if (!n->text) b->nomem = 1; }
 }
 static void h_pi(void *ud, const char *target, const char *data)
 {
     oxp_dom_builder *b = ud;
     flush(b);
     oxp_node *n = node(b, OXP_NODE_PI);
-    if (n) { n->name = str(b->d, target, strlen(target)); n->len = strlen(data); n->text = str(b->d, data, n->len); }
+    if (n) {
+        n->name = str(b->d, target, strlen(target)); n->len = strlen(data); n->text = str(b->d, data, n->len);
+        if (!n->name || !n->text) b->nomem = 1;
+    }
 }
 
 static const oxp_handler dom_handler = {
