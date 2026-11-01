@@ -18,6 +18,18 @@
 namespace {
 using S = std::string;
 using N = oxp_node;
+/* libstdc++'s std::regex matches depth-first by default: a C++ frame or more for
+ * every character of the value, so a float, dateTime, language or pattern value a
+ * few hundred characters long overflows a 32-64 KB Amiga stack (no guard page).
+ * __polynomial (a libstdc++ extension) picks its breadth-first matcher instead,
+ * whose depth is bounded by the expression, not the value; the same values match.
+ * It refuses back-references, which pattern() never lets through. */
+#ifdef __GLIBCXX__
+const std::regex::flag_type RX =
+    std::regex::ECMAScript | std::regex_constants::__polynomial;
+#else
+const std::regex::flag_type RX = std::regex::ECMAScript;
+#endif
 const S XS = "http://www.w3.org/2001/XMLSchema",
         XI = "http://www.w3.org/2001/XMLSchema-instance";
 S val(const char *s) { return s ? s : ""; }
@@ -114,7 +126,7 @@ S pattern(const N *n, const S &s) {
   if (s.find("-[") != S::npos)
     fail(n, "XSD character-class subtraction is unsupported", 2);
   try {
-    std::regex test(r);
+    std::regex test(r, RX);
     (void)test;
   } catch (const std::regex_error &) {
     fail(n, "Invalid/unsupported XSD pattern", 2);
@@ -123,7 +135,8 @@ S pattern(const N *n, const S &s) {
 }
 bool dateTime(const S &s) {
   static const std::regex re(
-      R"((-?[0-9]{4,})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(\.[0-9]+)?(Z|[+-]([0-9]{2}):([0-9]{2}))?)");
+      R"((-?[0-9]{4,})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(\.[0-9]+)?(Z|[+-]([0-9]{2}):([0-9]{2}))?)",
+      RX);
   std::smatch m;
   if (!std::regex_match(s, m, re))
     return false;
@@ -330,7 +343,7 @@ void audit(oxp_schema &s, N *n) {
       knownType(s, n, t);
   }
   if (xs(n, "pattern"))
-    s.patterns[n] = std::regex(pattern(n, attr(n, "value")));
+    s.patterns[n] = std::regex(pattern(n, attr(n, "value")), RX);
   if (xs(n, "any") || xs(n, "anyAttribute")) {
     S pc = attr(n, "processContents");
     if (pc != "skip" && !(xs(n, "anyAttribute") && pc == "lax"))
@@ -383,7 +396,7 @@ struct Validation {
     if (type == "boolean")
       return v == "true" || v == "false" || v == "0" || v == "1";
     if (type == "language") {
-      static const std::regex r("[A-Za-z]{1,8}(-[A-Za-z0-9]{1,8})*");
+      static const std::regex r("[A-Za-z]{1,8}(-[A-Za-z0-9]{1,8})*", RX);
       return std::regex_match(v, r);
     }
     if (type == "ID") {
@@ -401,7 +414,7 @@ struct Validation {
       return dateTime(v);
     if (type == "float" || type == "double") {
       static const std::regex r(
-          "[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?");
+          "[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?", RX);
       return v == "INF" || v == "-INF" || v == "NaN" || std::regex_match(v, r);
     }
     if (!integer(v))
