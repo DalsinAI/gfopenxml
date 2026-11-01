@@ -7,7 +7,7 @@ WebKit (SVG, XHTML, `DOMParser`, `responseXML`). It is also meant for the
 GFOpen family's other XML readers, such as GFOpenWrite (ODT and DOCX are XML)
 and GFOpenMail.
 
-MIT licensed and free. Copyright (c) 2026 AmigaChrome Team.
+MIT licensed and free. Copyright (c) 2026 AmiCradle Team.
 
 **Status: 0.1, new.** It passes every in-scope test of the W3C XML
 Conformance Test Suite and every case in `tests/cases`. On 4,780 real files

@@ -1,5 +1,5 @@
 /* oxpdump: print a document's events, one a line (the format tests/ compare).
- * MIT licence. Copyright (c) 2026 AmigaChrome Team.
+ * MIT licence. Copyright (c) 2026 AmiCradle Team.
  *   oxpdump [-c N] [-f] [-n] [-e utf16le|utf16be|latin1|utf8] FILE
  *   -c N  feed N bytes at a time (default: all at once)   -f fragment   -n no namespaces */
 #include "oxp.h"

@@ -1,5 +1,5 @@
 /* OXP: the Open XML Parser, the streaming core.
- * MIT licence. Copyright (c) 2026 AmigaChrome Team.
+ * MIT licence. Copyright (c) 2026 AmiCradle Team.
  *
  * Written from the XML 1.0 (fifth edition) and Namespaces in XML 1.0
  * (third edition) specifications. Production names in the comments are

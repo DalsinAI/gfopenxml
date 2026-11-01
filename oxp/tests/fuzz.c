@@ -1,6 +1,6 @@
 /* libFuzzer target: clang -fsanitize=fuzzer,address,undefined -Iinclude tests/fuzz.c src/oxp.c
  * The first byte picks the options and the chunk size; the rest is the document.
- * MIT licence. Copyright (c) 2026 AmigaChrome Team. */
+ * MIT licence. Copyright (c) 2026 AmiCradle Team. */
 #include "oxp.h"
 #include <stdint.h>
 #include <string.h>

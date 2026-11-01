@@ -1,4 +1,4 @@
-/* Optional XSD subset validator for OXP trees. MIT, AmigaChrome Team 2026.
+/* Optional XSD subset validator for OXP trees. MIT, AmiCradle Team 2026.
  * Supported constructs are documented in SCHEMA.md. Unsupported schema
  * constructs fail at compilation; there is no silently non-validating mode.
  * No external documents, schemas, DTDs or entities are fetched. */

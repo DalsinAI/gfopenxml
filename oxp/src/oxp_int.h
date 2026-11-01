@@ -1,4 +1,4 @@
-/* OXP internals. MIT licence. Copyright (c) 2026 AmigaChrome Team. */
+/* OXP internals. MIT licence. Copyright (c) 2026 AmiCradle Team. */
 #ifndef OXP_INT_H
 #define OXP_INT_H
 

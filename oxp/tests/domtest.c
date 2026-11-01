@@ -1,5 +1,5 @@
 /* DOM test: read a file, check a few lookups, write it back, and check the
- * written text reads to the same events. MIT licence. Copyright (c) 2026 AmigaChrome Team.
+ * written text reads to the same events. MIT licence. Copyright (c) 2026 AmiCradle Team.
  *   domtest FILE OUT   (OUT: the serialised document) */
 #include "oxp_dom.h"
 #include <stdio.h>

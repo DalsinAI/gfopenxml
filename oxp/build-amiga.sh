@@ -1,6 +1,6 @@
 #!/bin/sh
 # OXP for AmigaOS 3.x: the 68040, soft float, with the os32-gcc16 compiler.
-# MIT licence. Copyright (c) 2026 AmigaChrome Team.
+# MIT licence. Copyright (c) 2026 AmiCradle Team.
 #   OS32_GCC16  compiler root holding prefix/ (default ~/AmiCradle/stoves/os32-gcc16)
 #   OUT         where liboxp.a, the headers and the test programs go (default oxp/build-amiga)
 # The parser uses no floating point; the soft-float link (toolchain/m68k-soft-m68040.specs)

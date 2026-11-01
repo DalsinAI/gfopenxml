@@ -3,7 +3,7 @@
 #   sh tests/ref/compare.sh LIST     (needs build/oxpdump and build/libxml2dump: REF=1 sh build-host.sh)
 # SAME: the same events. DIFF: both read it, the events differ (kept in ref-diffs/).
 # BOTH-ERR / ERR-OXP / ERR-LIBXML2: who refused the file. Unreadable files are left out.
-# MIT licence. Copyright (c) 2026 AmigaChrome Team.
+# MIT licence. Copyright (c) 2026 AmiCradle Team.
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 B="$HERE/../../build"
 mkdir -p ref-diffs

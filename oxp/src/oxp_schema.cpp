@@ -1,4 +1,4 @@
-/* OXP optional XSD validator. MIT, Copyright (c) 2026 AmigaChrome Team. */
+/* OXP optional XSD validator. MIT, Copyright (c) 2026 AmiCradle Team. */
 #include "oxp_schema.h"
 #include <algorithm>
 #include <cerrno>

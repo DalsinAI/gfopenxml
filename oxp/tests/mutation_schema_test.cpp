@@ -1,5 +1,5 @@
 /* Behavioural regression tests for editable OXP trees and validation.
- * MIT, Copyright (c) 2026 AmigaChrome Team. */
+ * MIT, Copyright (c) 2026 AmiCradle Team. */
 #include "oxp_schema.h"
 #include <cstdio>
 #include <cstring>

@@ -1,5 +1,5 @@
 /* OXP: the Open XML Parser.
- * MIT licence. Copyright (c) 2026 AmigaChrome Team.
+ * MIT licence. Copyright (c) 2026 AmiCradle Team.
  *
  * A non-validating XML 1.0 (fifth edition) parser with Namespaces in XML 1.0,
  * written from those two specifications. A streaming (SAX-style) core, fed

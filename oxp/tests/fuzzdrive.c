@@ -4,7 +4,7 @@
  *   cc -g -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -Iinclude \
  *      tests/fuzzdrive.c tests/fuzz.c src/oxp.c -o fuzzdrive
  *   ./fuzzdrive SECONDS SEEDDIR...   (the input being run is kept in fuzz-cur.bin)
- * MIT licence. Copyright (c) 2026 AmigaChrome Team. */
+ * MIT licence. Copyright (c) 2026 AmiCradle Team. */
 #include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>

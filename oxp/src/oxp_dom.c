@@ -1,4 +1,4 @@
-/* OXP's small tree. MIT licence. Copyright (c) 2026 AmigaChrome Team. */
+/* OXP's small tree. MIT licence. Copyright (c) 2026 AmiCradle Team. */
 #include "oxp_dom.h"
 #include <stdlib.h>
 #include <string.h>
