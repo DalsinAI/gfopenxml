@@ -1,5 +1,5 @@
 #!/bin/sh
-# Optional DOM mutation/XSD build. MIT, Copyright (c) 2026 AmigaChrome Team.
+# Optional DOM mutation/XSD build. MIT, Copyright (c) 2026 AmiCradle Team.
 # Does not change the original streaming parser build or require schemas there.
 # Usage: sh oxp/build-schema.sh host|amiga
 set -eu

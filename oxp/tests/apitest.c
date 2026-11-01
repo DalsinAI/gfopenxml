@@ -1,5 +1,5 @@
 /* API checks that the event dumps don't show: the XML declaration signal and
- * the nested-reference limit. MIT licence. Copyright (c) 2026 AmigaChrome Team. */
+ * the nested-reference limit. MIT licence. Copyright (c) 2026 AmiCradle Team. */
 #include "oxp.h"
 #include "oxp_dom.h"
 #include <stdio.h>

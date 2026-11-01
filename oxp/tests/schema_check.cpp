@@ -1,4 +1,4 @@
-/* Standalone schema/fixture runner. MIT, AmigaChrome Team 2026. */
+/* Standalone schema/fixture runner. MIT, AmiCradle Team 2026. */
 #include "oxp_schema.h"
 #include <cstdio>
 #include <fstream>

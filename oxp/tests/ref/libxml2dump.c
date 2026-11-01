@@ -1,7 +1,7 @@
 /* libxml2dump: the reference side of tests/ref. It prints libxml2's SAX2
  * events in oxpdump's format, so the two outputs can be compared. A host
  * test tool only: it uses libxml2 through its public interface and is never
- * part of OXP.  MIT licence. Copyright (c) 2026 AmigaChrome Team.
+ * part of OXP.  MIT licence. Copyright (c) 2026 AmiCradle Team.
  *   cc -I/usr/include/libxml2 libxml2dump.c -lxml2 */
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>

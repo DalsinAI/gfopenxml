@@ -1,6 +1,6 @@
 /* Compare integer validation through the public schema API.
  * SPDX-License-Identifier: MIT
- * Copyright (c) 2026 AmigaChrome Team */
+ * Copyright (c) 2026 AmiCradle Team */
 #include "oxp_schema.h"
 #include <cstdio>
 #include <cstring>

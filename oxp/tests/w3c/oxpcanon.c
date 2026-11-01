@@ -2,7 +2,7 @@
  * test suite's OUTPUT files use: no DOCTYPE or comments; attributes (namespace
  * declarations among them) sorted by name; & < > " TAB LF CR as references.
  *   oxpcanon [-n] FILE      (-n: no namespace processing)
- * Exit status: 0 well-formed, 1 not.  MIT licence. Copyright (c) 2026 AmigaChrome Team. */
+ * Exit status: 0 well-formed, 1 not.  MIT licence. Copyright (c) 2026 AmiCradle Team. */
 #include "oxp.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 /* OXP's small tree: a document read into nodes, for programs that want the
  * whole of a document at once (GFOpenWrite's ODT and DOCX parts, GFOpenMail's
  * feeds and settings). Built on the streaming parser (oxp.h).
- * MIT licence. Copyright (c) 2026 AmigaChrome Team.
+ * MIT licence. Copyright (c) 2026 AmiCradle Team.
  *
  * Every string in a tree is UTF-8 and NUL-terminated, and lives as long as
  * the tree. Adjacent text is one node; CDATA sections are their own nodes.

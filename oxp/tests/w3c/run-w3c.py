@@ -13,7 +13,7 @@
 #   not-wf          must be refused
 #   error           reported, not scored (the processor may go either way)
 # Needs lxml (for the catalog's external entities).
-# MIT licence. Copyright (c) 2026 AmigaChrome Team.
+# MIT licence. Copyright (c) 2026 AmiCradle Team.
 import os, subprocess, sys, collections, urllib.parse
 from lxml import etree
 

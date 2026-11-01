@@ -2,7 +2,7 @@
 # OXP on the host: liboxp.a, oxpdump and domtest in oxp/build, then the cases.
 # With REF=1 it also builds tests/ref/libxml2dump (needs libxml2's headers),
 # the reference side of the event comparison (tests/ref/compare.sh).
-# MIT licence. Copyright (c) 2026 AmigaChrome Team.
+# MIT licence. Copyright (c) 2026 AmiCradle Team.
 set -eu
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 CC=${CC:-cc}

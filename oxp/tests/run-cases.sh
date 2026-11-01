@@ -4,7 +4,7 @@
 # same events, an ill-formed one the same error (events before an error may
 # come earlier when the input arrives in pieces).
 #   sh tests/run-cases.sh [OXPDUMP]       (default: build/oxpdump)
-# MIT licence. Copyright (c) 2026 AmigaChrome Team.
+# MIT licence. Copyright (c) 2026 AmiCradle Team.
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 DUMP=${1:-"$HERE/../build/oxpdump"}
 pass=0; failn=0
