@@ -5,6 +5,9 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#ifdef __linux__
+#include <pthread.h>
+#endif
 static unsigned checks = 0, failures = 0;
 #define CHECK(x)                                                               \
   do {                                                                         \
@@ -216,7 +219,44 @@ static void integerBounds() {
     }
   }
 }
+/* Long values, validated with a small stack as on the Amiga (32-64 KB): the
+ * float, dateTime, language and pattern checks once took a C++ frame or more
+ * per character (std::regex's depth-first matcher) and overflowed it. */
+static void longValuesOnSmallStack() {
+  using S = std::string;
+  auto s = compile(
+      R"(<x:schema xmlns:x="http://www.w3.org/2001/XMLSchema"><x:element name="r"><x:complexType><x:attribute name="f" type="x:float"/><x:attribute name="d" type="x:dateTime"/><x:attribute name="l" type="x:language"/><x:attribute name="p"><x:simpleType><x:restriction base="x:string"><x:pattern value="$Revision[:]?[ ]*[\d]*[ ]*$"/></x:restriction></x:simpleType></x:attribute></x:complexType></x:element></x:schema>)");
+  CHECK(s);
+  if (!s)
+    return;
+  const S digits(5000, '7');
+  S lang = "en";
+  for (int i = 0; i < 500; ++i)
+    lang += "-abc1";
+  const S good = "<r f='1." + digits + "e5' d='2026-11-01T10:00:00." + digits +
+                 "+01:00' l='" + lang + "' p='$Revision: " + digits + " $'/>";
+  const S bad = "<r f='1." + digits + "x'/>";
+  oxp_schema_error e;
+  auto g = parse(good), b = parse(bad);
+  CHECK(g && b);
+  if (g)
+    CHECK(oxp_schema_validate(s.get(), g.get(), &e) == 0);
+  if (b)
+    CHECK(oxp_schema_validate(s.get(), b.get(), &e) == -1);
+}
 int main() {
+#ifdef __linux__
+  {
+    pthread_attr_t a;
+    pthread_t t;
+    pthread_attr_init(&a);
+    pthread_attr_setstacksize(&a, 64 * 1024);
+    CHECK(pthread_create(&t, &a, [](void *) -> void * { longValuesOnSmallStack(); return nullptr; }, nullptr) == 0);
+    pthread_join(t, nullptr);
+  }
+#else
+  longValuesOnSmallStack();
+#endif
   integerBounds();
   validation();
   keys();
