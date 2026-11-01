@@ -1,8 +1,8 @@
 # openamigaxml
 
 libxml2 and Expat for AmigaOS 3.x on 68k, built as static link libraries for
-GCC programs. Part of the [OpenAmiga](https://github.com/DalsinAI/openamiga)
-ports, made for [OpenBrowser](https://github.com/DalsinAI/openamigabrowser),
+GCC programs. Part of the [GFOpenAmiga](https://github.com/DalsinAI/openamiga)
+ports, made for [GFOpenBrowser](https://github.com/DalsinAI/openamigabrowser),
 the WebKit browser for AmigaOS 3.2.
 
 **Status:** Working: both build, and their smoke tests pass on the bench.
@@ -55,7 +55,7 @@ Link with: `-lxml2 -lexpat -lpthread -lm`
 
 ## Tested
 
-`tests/xmltest.c`, run on AmigaOS 3.2.3 on AmigaChrome's AC090 emulation (68040 with FPU, 256 MB), Instance-24, 4 October 2026, as `xmltest`:
+`tests/xmltest.c`, run on AmigaOS 3.2.3 on AmiCradle's AC090 emulation (68040 with FPU, 256 MB), Instance-24, 4 October 2026, as `xmltest`:
 
 ```
 LIBXML 21504

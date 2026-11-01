@@ -1,5 +1,5 @@
 /* OXP's small tree: a document read into nodes, for programs that want the
- * whole of a document at once (OpenWrite's ODT and DOCX parts, OpenMail's
+ * whole of a document at once (GFOpenWrite's ODT and DOCX parts, GFOpenMail's
  * feeds and settings). Built on the streaming parser (oxp.h).
  * MIT licence. Copyright (c) 2026 AmigaChrome Team.
  *

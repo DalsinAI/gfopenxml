@@ -1,14 +1,14 @@
 #!/bin/sh
 # OXP for AmigaOS 3.x: the 68040, soft float, with the os32-gcc16 compiler.
 # MIT licence. Copyright (c) 2026 AmigaChrome Team.
-#   OS32_GCC16  compiler root holding prefix/ (default ~/AmigaChrome/stoves/os32-gcc16)
+#   OS32_GCC16  compiler root holding prefix/ (default ~/AmiCradle/stoves/os32-gcc16)
 #   OUT         where liboxp.a, the headers and the test programs go (default oxp/build-amiga)
 # The parser uses no floating point; the soft-float link (toolchain/m68k-soft-m68040.specs)
 # is for the test programs, which link libnix.
 set -eu
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(CDPATH= cd -- "$HERE/.." && pwd)
-S=${OS32_GCC16:-"$HOME/AmigaChrome/stoves/os32-gcc16"}
+S=${OS32_GCC16:-"$HOME/AmiCradle/stoves/os32-gcc16"}
 P=$S/prefix
 OUT=${OUT:-"$HERE/build-amiga"}
 CC="$P/bin/m68k-amigaos-gcc"

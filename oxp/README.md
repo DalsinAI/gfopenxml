@@ -2,10 +2,10 @@
 
 The Team's own XML 1.0 parser, written from the XML 1.0 (fifth edition) and
 Namespaces in XML 1.0 specifications only. No code from libxml2, Expat or any
-other parser went into it. It is meant to replace libxml2 under OpenBrowser's
+other parser went into it. It is meant to replace libxml2 under GFOpenBrowser's
 WebKit (SVG, XHTML, `DOMParser`, `responseXML`). It is also meant for the
-Open family's other XML readers, such as OpenWrite (ODT and DOCX are XML)
-and OpenMail.
+GFOpen family's other XML readers, such as GFOpenWrite (ODT and DOCX are XML)
+and GFOpenMail.
 
 MIT licensed and free. Copyright (c) 2026 AmigaChrome Team.
 
