@@ -1,5 +1,5 @@
 #!/bin/sh
-# openamigaxml: libxml2 and Expat, built for AmigaOS 3.x (68040 + FPU) with the
+# gfopenxml: libxml2 and Expat, built for AmigaOS 3.x (68040 + FPU) with the
 # os32-gcc16 compiler (bebbo's amiga-gcc, GCC 16.2, libnix, libpthread).
 # MIT, Copyright (c) 2026 AmiCradle Team. The library keeps its own licence.
 #
@@ -55,7 +55,7 @@ archive() {
     echo "lib$name.a: $(wc -c < "$OUT/lib/lib$name.a") bytes"
 }
 
-TOOLCHAIN=${TOOLCHAIN_FILE:?set TOOLCHAIN_FILE to openamigabrowser/toolchain/amigaos3-gcc16.cmake}
+TOOLCHAIN=${TOOLCHAIN_FILE:?set TOOLCHAIN_FILE to gfopenbrowser/toolchain/amigaos3-gcc16.cmake}
 # the toolchain file reads its CPU flags from OS32_CPU_FLAGS: the same as ours
 export OS32_CPU_FLAGS="$CPU"
 unpack libxml2 libxml2-2.15.4.tar.xz 98087fd181d9070724f3fbc65c7377db03038eb92bd882374daff44940138821

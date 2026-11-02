@@ -2,7 +2,7 @@
 
 ## Creator and maintainer
 
-- **SacredTrees** ([@SacredTrees](https://github.com/SacredTrees)): created and maintains this AmigaOS port of libxml2 and Expat (openamigaxml).
+- **SacredTrees** ([@SacredTrees](https://github.com/SacredTrees)): created and maintains this AmigaOS port of libxml2 and Expat (gfopenxml).
 
 ## The AmiCradle team
 
@@ -18,7 +18,7 @@ Our Amiga work here (the build script, the Expat configuration header
 `config/expat/expat_config.h` and the tests) is Copyright (c) 2026 AmiCradle
 Team, released under the MIT licence (`LICENSE`). So is OXP (`oxp/`), the
 Team's own XML parser, written from the W3C specifications alone, and
-`toolchain/m68k-soft-m68040.specs`, from DalsinAI/amigachrome-stoves. libxml2 and Expat are
+`toolchain/m68k-soft-m68040.specs`, from DalsinAI/amicradle-stoves. libxml2 and Expat are
 not ours: they stay copyright their authors under their own licences.
 
 ## Third-party work in this repository
