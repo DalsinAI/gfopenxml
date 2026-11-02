@@ -1,4 +1,4 @@
-/* openamigaxml smoke test for Expat: stream-parse a document with handlers. */
+/* gfopenxml smoke test for Expat: stream-parse a document with handlers. */
 #include <stdio.h>
 #include <string.h>
 #include <expat.h>

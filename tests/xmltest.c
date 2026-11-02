@@ -1,4 +1,4 @@
-/* openamigaxml smoke test: parse a document, walk it, serialise it. */
+/* gfopenxml smoke test: parse a document, walk it, serialise it. */
 #include <stdio.h>
 #include <string.h>
 #include <libxml/parser.h>
