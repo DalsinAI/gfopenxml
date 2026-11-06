@@ -13,7 +13,9 @@ mkdir -p "$OUT"
 $CC $CFLAGS -I"$HERE/include" -c "$HERE/src/oxp.c" -o "$OUT/oxp.o"
 # shellcheck disable=SC2086
 $CC $CFLAGS -I"$HERE/include" -c "$HERE/src/oxp_dom.c" -o "$OUT/oxp_dom.o"
-ar rcs "$OUT/liboxp.a" "$OUT/oxp.o" "$OUT/oxp_dom.o"
+# shellcheck disable=SC2086
+$CC $CFLAGS -I"$HERE/include" -c "$HERE/src/oxp_html.c" -o "$OUT/oxp_html.o"
+ar rcs "$OUT/liboxp.a" "$OUT/oxp.o" "$OUT/oxp_dom.o" "$OUT/oxp_html.o"
 # shellcheck disable=SC2086
 $CC $CFLAGS -I"$HERE/include" -o "$OUT/oxpdump" "$HERE/tools/oxpdump.c" "$OUT/liboxp.a"
 # shellcheck disable=SC2086
@@ -24,4 +26,7 @@ fi
 # shellcheck disable=SC2086
 $CC $CFLAGS -I"$HERE/include" -o "$OUT/apitest" "$HERE/tests/apitest.c" "$OUT/liboxp.a"
 "$OUT/apitest"
+# shellcheck disable=SC2086
+$CC $CFLAGS -I"$HERE/include" -o "$OUT/htmltest" "$HERE/tests/htmltest.c" "$OUT/liboxp.a"
+"$OUT/htmltest"
 sh "$HERE/tests/run-cases.sh" "$OUT/oxpdump"

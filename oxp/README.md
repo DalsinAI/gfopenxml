@@ -23,6 +23,14 @@ backend of its own (`WEBKIT.md`).
 - **A small tree** (`include/oxp_dom.h`), built from those events. It has
   lookups by namespace and name, `textContent`, and a writer that escapes
   text and values.
+- **An HTML reader** (`include/oxp_html.h`, `oxp_html_parse`): everyday
+  HTML, as chat lines, news pages and help text carry it, read into the same
+  tree, forgiving as browsers are: void and raw-text elements, the common
+  implied ends (p, li, dd, dt, option, tr, td, th), unquoted and bare
+  attributes, the named entities a page of text uses, Latin-1 bytes read as
+  such, and an html root with a body always. It never fails on bad markup.
+  Not an HTML5 parser: the browser keeps WebKit's own. `tests/htmltest.c`
+  checks cases and random markup (under ASan and UBSan on the host).
 - **Namespaces** (Namespaces in XML 1.0, third edition), with every
   namespace constraint checked. One option, `OXP_OPT_UNBOUND_PREFIX`, makes
   an undeclared prefix a non-fatal error with no namespace, as libxml2 does.

@@ -17,14 +17,15 @@ SPECS="$ROOT/toolchain/m68k-soft-m68040.specs"
 CFLAGS="-m68040 -specs=$SPECS -mcrt=nix20 -O2 -std=gnu99 -fno-delete-null-pointer-checks -fomit-frame-pointer \
   -Wall -Wextra -Werror -I$HERE/include"
 mkdir -p "$OUT/obj" "$OUT/lib" "$OUT/include" "$OUT/bin"
-for f in oxp oxp_dom; do $CC $CFLAGS -c "$HERE/src/$f.c" -o "$OUT/obj/$f.o"; done
+for f in oxp oxp_dom oxp_html; do $CC $CFLAGS -c "$HERE/src/$f.c" -o "$OUT/obj/$f.o"; done
 rm -f "$OUT/lib/liboxp.a"
-$AR rcs "$OUT/lib/liboxp.a" "$OUT/obj/oxp.o" "$OUT/obj/oxp_dom.o"
-cp "$HERE/include/oxp.h" "$HERE/include/oxp_dom.h" "$OUT/include/"
+$AR rcs "$OUT/lib/liboxp.a" "$OUT/obj/oxp.o" "$OUT/obj/oxp_dom.o" "$OUT/obj/oxp_html.o"
+cp "$HERE/include/oxp.h" "$HERE/include/oxp_dom.h" "$HERE/include/oxp_html.h" "$OUT/include/"
 $CC $CFLAGS -o "$OUT/bin/oxpdump" "$HERE/tools/oxpdump.c" -L"$OUT/lib" -loxp
 $CC $CFLAGS -o "$OUT/bin/domtest" "$HERE/tests/domtest.c" -L"$OUT/lib" -loxp
+$CC $CFLAGS -o "$OUT/bin/htmltest" "$HERE/tests/htmltest.c" -L"$OUT/lib" -loxp
 # no FPU code anywhere in the library
-if "$P/bin/m68k-amigaos-objdump" -d "$OUT/obj/oxp.o" "$OUT/obj/oxp_dom.o" | grep -q -E '\sf(move|add|sub|mul|div|cmp)'; then
+if "$P/bin/m68k-amigaos-objdump" -d "$OUT/obj/oxp.o" "$OUT/obj/oxp_dom.o" "$OUT/obj/oxp_html.o" | grep -q -E '\sf(move|add|sub|mul|div|cmp)'; then
   echo "liboxp.a has FPU instructions" >&2; exit 1
 fi
-echo "liboxp.a: $(wc -c < "$OUT/lib/liboxp.a") bytes; code: $("$P/bin/m68k-amigaos-size" "$OUT/obj/oxp.o" "$OUT/obj/oxp_dom.o" | awk 'NR>1 {t+=$1} END {print t}') bytes"
+echo "liboxp.a: $(wc -c < "$OUT/lib/liboxp.a") bytes; code: $("$P/bin/m68k-amigaos-size" "$OUT/obj/oxp.o" "$OUT/obj/oxp_dom.o" "$OUT/obj/oxp_html.o" | awk 'NR>1 {t+=$1} END {print t}') bytes"
